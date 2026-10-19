@@ -116,10 +116,12 @@ type TextAreaFieldProps = {
   label: string
   hint?: ReactNode
   errors?: string[]
+  /** Day 20: when two forms on one page have a field with the same name, give each its own id. */
+  id?: string
 } & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'name' | 'id'>
 
-export function TextAreaField({ name, label, hint, errors, className, ...textarea }: TextAreaFieldProps) {
-  const ids = fieldIds(name)
+export function TextAreaField({ name, label, hint, errors, className, id, ...textarea }: TextAreaFieldProps) {
+  const ids = fieldIds(id ?? name)
   const invalid = Boolean(errors?.length)
   return (
     <div className={className}>
@@ -136,11 +138,11 @@ export function TextAreaField({ name, label, hint, errors, className, ...textare
         name={name}
         rows={3}
         aria-invalid={invalid || undefined}
-        aria-describedby={describedBy(name, Boolean(hint), invalid)}
+        aria-describedby={describedBy(id ?? name, Boolean(hint), invalid)}
         className="field block w-full px-3.5 py-2.5 text-base"
         {...textarea}
       />
-      <FieldError name={name} errors={errors} />
+      <FieldError name={id ?? name} errors={errors} />
     </div>
   )
 }

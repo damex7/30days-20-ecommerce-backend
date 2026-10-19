@@ -8,7 +8,7 @@
 // are identical either way.
 import 'server-only'
 
-import { getCurrentSession, verifySession } from '@/lib/auth/dal'
+import { getCurrentSession, requireRole, verifySession } from '@/lib/auth/dal'
 import { anonymous, userActor, type Actor, type UserActor } from './actor'
 
 /** Whoever is signed in, or anonymous. For public pages (the shop). */
@@ -20,5 +20,11 @@ export async function getPageActor(): Promise<Actor> {
 /** A signed-in user, or a redirect to /login (Day 17's verifySession). */
 export async function requirePageActor(): Promise<UserActor> {
   const { user } = await verifySession()
+  return userActor(user)
+}
+
+/** Staff or admin, or a redirect to the person's own home (Day 19's requireRole). */
+export async function requireShopActor(): Promise<UserActor> {
+  const { user } = await requireRole('staff', 'admin')
   return userActor(user)
 }
