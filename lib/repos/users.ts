@@ -57,3 +57,14 @@ export function findAdminUser(db: Db, id: string): Promise<AdminUserRow | null> 
     'findAdminUser',
   )
 }
+
+/** Who gets the "new paid order" email: active staff and admins, never demo accounts. */
+export async function listStaffEmails(db: Db): Promise<string[]> {
+  const result = await rows(
+    db,
+    z.object({ email: z.string() }),
+    q`SELECT email::text AS email FROM users WHERE role IN ('staff', 'admin') AND deactivated_at IS NULL AND NOT is_demo`,
+    'listStaffEmails',
+  )
+  return result.map((r) => r.email)
+}

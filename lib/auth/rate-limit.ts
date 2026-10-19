@@ -18,7 +18,8 @@ import 'server-only'
 import { createHash } from 'node:crypto'
 import { sql } from '@/lib/db'
 
-export type RateLimitAction = 'login' | 'signup' | 'forgot' | 'resend'
+// Day 20 adds three: placing orders, API-key traffic and the demo buttons.
+export type RateLimitAction = 'login' | 'signup' | 'forgot' | 'resend' | 'order' | 'api_key' | 'api_key_demo' | 'demo'
 
 /** How long each window lasts, and how many attempts fit in it per IP / per email (or user). */
 export const RATE_LIMITS: Record<RateLimitAction, { windowSeconds: number; perIp: number; perAccount: number }> = {
@@ -26,6 +27,15 @@ export const RATE_LIMITS: Record<RateLimitAction, { windowSeconds: number; perIp
   forgot: { windowSeconds: 60 * 60, perIp: 10, perAccount: 3 },
   signup: { windowSeconds: 60 * 60, perIp: 5, perAccount: 3 },
   resend: { windowSeconds: 60 * 60, perIp: 10, perAccount: 3 },
+  // Per customer: 10 orders an hour. Per IP higher (an office shares one).
+  order: { windowSeconds: 60 * 60, perIp: 30, perAccount: 10 },
+  // Per API key ("account" = the key id): 120 requests a minute. The IP
+  // limit is a backstop for a key shared too widely.
+  api_key: { windowSeconds: 60, perIp: 600, perAccount: 120 },
+  // The demo key printed on /docs is public, so it's much tighter.
+  api_key_demo: { windowSeconds: 60, perIp: 30, perAccount: 120 },
+  // The "Explore the demo" buttons: each customer click creates an account.
+  demo: { windowSeconds: 60 * 60, perIp: 10, perAccount: 1000 },
 }
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number; message: string }

@@ -36,6 +36,7 @@ export const OrderRow = z.object({
   deliveryMinDays: z.number().int(),
   deliveryMaxDays: z.number().int(),
   paystackReference: z.string(),
+  paystackAuthorizationUrl: z.string().nullable(),
   paidAt: z.date().nullable(),
   expiresAt: z.date().nullable(),
   cancelledAt: z.date().nullable(),
@@ -85,7 +86,8 @@ const orderColumns = q`
   o.ship_recipient AS "shipRecipient", o.ship_phone AS "shipPhone", o.ship_street AS "shipStreet",
   o.ship_city AS "shipCity", o.ship_state AS "shipState", o.ship_landmark AS "shipLandmark",
   o.delivery_min_days AS "deliveryMinDays", o.delivery_max_days AS "deliveryMaxDays",
-  o.paystack_reference AS "paystackReference", o.paid_at AS "paidAt", o.expires_at AS "expiresAt",
+  o.paystack_reference AS "paystackReference",
+  o.paystack_authorization_url AS "paystackAuthorizationUrl", o.paid_at AS "paidAt", o.expires_at AS "expiresAt",
   o.cancelled_at AS "cancelledAt", o.is_demo AS "isDemo", o.version,
   (SELECT coalesce(sum(oi.quantity), 0)::int FROM order_items oi WHERE oi.order_id = o.id) AS "itemCount",
   o.created_at AS "createdAt", o.updated_at AS "updatedAt", o.created_at::text AS "cursorTs"`
@@ -301,6 +303,11 @@ export async function updateOrderStatus(
     'updateOrderStatus',
   )
   return result[0]?.version ?? null
+}
+
+/** Keeps Paystack's checkout link for this order, to reuse on a second "Pay" click. */
+export async function savePaymentLink(db: Db, orderId: number, url: string): Promise<void> {
+  await db.query(q`UPDATE orders SET paystack_authorization_url = ${url} WHERE id = ${orderId} AND paystack_authorization_url IS NULL`)
 }
 
 // ---------------------------------------------------------------------------

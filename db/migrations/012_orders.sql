@@ -76,6 +76,11 @@ CREATE TABLE orders (
   -- order. Set at checkout, before the customer reaches Paystack.
   paystack_reference text       NOT NULL UNIQUE CHECK (paystack_reference ~ '^[A-Za-z0-9_-]{8,64}$'),
 
+  -- Paystack refuses a second "initialize" for the same reference, so the
+  -- checkout link from the first one is kept and reused if the customer
+  -- comes back to pay (another tab, a retry after a network drop).
+  paystack_authorization_url text NULL CHECK (paystack_authorization_url ~ '^https://'),
+
   paid_at           timestamptz NULL,
 
   -- UNPAID ORDERS RESERVE STOCK for 30 minutes. After that they are
