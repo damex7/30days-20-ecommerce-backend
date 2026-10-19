@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { connection } from 'next/server'
 import { Suspense } from 'react'
 import { Mark } from '@/components/brand/mark'
 import { ProductCard, ProductGridSkeleton } from '@/components/shop/product-card'
@@ -61,7 +62,11 @@ export default function HomePage() {
   )
 }
 
+// Stock and prices change with every order, so these read the database at
+// request time: connection() tells Cache Components not to bake them into
+// the page at build time.
 async function Categories() {
+  await connection()
   const categories = await listCategories()
   return (
     <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -78,6 +83,7 @@ async function Categories() {
 }
 
 async function Newest() {
+  await connection()
   const page = await listProducts(anonymous, { sort: 'newest', limit: 4 })
   return (
     <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-4">
