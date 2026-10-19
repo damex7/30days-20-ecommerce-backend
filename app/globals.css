@@ -1,26 +1,300 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * ỌJÀ DESIGN TOKENS: palette "Aba workshop".
+ *
+ * Taken from a leather workshop in Ariaria market:
+ *   - ESPRESSO HIDE (deep brown): primary buttons, the selected choice, the
+ *     active tab and the brand mark. Things you press or have chosen.
+ *   - UNBLEACHED CANVAS: the page, like the cotton drill the cutters lay
+ *     the hides on.
+ *   - WAXED BLACK THREAD: text.
+ *   - DENIM SLATE (a faded, greyed blue): links, focus rings, the /docs
+ *     page and code. Cool against all that warm brown, so a link never
+ *     looks like a button.
+ * Dark mode is a near-black walnut with soft canvas text; the hide becomes
+ * a lighter TAN-BROWN (hue ~31°, kept low in saturation so it stays brown,
+ * never orange).
+ *
+ * ORDER STATUSES and HTTP METHODS each get their own colour AND a glyph AND
+ * a word, so none relies on colour alone, and none is brown or denim:
+ *   pending_payment  ash grey, dashed outline, "◌"
+ *   paid             cobalt blue (hue ~222°, far from denim's ~210° greyed blue by saturation), "●"
+ *   processing       khaki olive (hue ~58°, muted: not lime, not canary), "◐"
+ *   shipped          a charcoal chip with light text (inverted), "➜"
+ *   delivered        bottle green, "✓"
+ *   cancelled        brick red, "✕"
+ *   refunded         brick red OUTLINE on the page colour, "↺"
+ *   GET green · POST cobalt · PUT charcoal · PATCH khaki · DELETE brick
+ *
+ * No peach, tangerine, orange, lime, indigo, teal, rose-pink, canary yellow
+ * or plum anywhere. `--color-*: initial` removes Tailwind's default palette,
+ * so an off-brand `bg-orange-500` doesn't even exist.
+ *
+ * Each colour is written ONCE as light-dark(light, dark); `color-scheme`
+ * (set from data-theme by the toggle) picks the side. `npm run
+ * check:contrast` checks every pair the UI uses, in both modes.
+ */
+@theme {
+  --color-*: initial;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Surfaces: canvas page, raised cards, sunken wells. */
+  --color-paper: light-dark(#f3ecdf, #15100d);
+  --color-raised: light-dark(#fbf7ef, #1f1814);
+  --color-sunken: light-dark(#e9e0cf, #0e0a08);
+  /* Decorative lines: the stitching. */
+  --color-line: light-dark(#d6c8ae, #3b2f27);
+  /* Borders that must be SEEN (inputs, buttons): 3:1 on every surface. */
+  --color-line-strong: light-dark(#85735e, #8d7d6b);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Waxed thread on canvas; canvas on walnut. */
+  --color-ink: light-dark(#1c1714, #ede4d6);
+  --color-muted: light-dark(#5b4f43, #baac99);
+
+  /* The hide. */
+  --color-brand: light-dark(#4a2c1d, #c49a6c);
+  --color-brand-hover: light-dark(#38200f, #d6b088);
+  --color-on-brand: light-dark(#fbf7ef, #1a120d);
+  /* A soft hide tint: selected rows, hovers, the chosen radio. */
+  --color-tint: light-dark(#ece0cd, #2c211a);
+  --color-tint-strong: light-dark(#dfcdb1, #3d2d22);
+
+  /* Denim slate: links, focus, docs. */
+  --color-link: light-dark(#2e4b67, #a3bfda);
+  --color-link-soft: light-dark(#e2e8ee, #19222c);
+  --color-focus: light-dark(#2d5a86, #9fc3e8);
+
+  /* Errors, cancelled, DELETE: brick red. */
+  --color-danger: light-dark(#9a2a22, #f19c91);
+  --color-danger-hover: light-dark(#7c1f18, #f6b6ad);
+  --color-on-danger: light-dark(#ffffff, #1c0907);
+  --color-danger-soft: light-dark(#f3ded9, #3a1915);
+
+  /* Success, delivered, GET: bottle green. */
+  --color-success: light-dark(#1e5d39, #8fd1a6);
+  --color-on-success: light-dark(#ffffff, #08200f);
+  --color-success-soft: light-dark(#dbeadd, #142a1d);
+
+  /* Paid, POST: cobalt. */
+  --color-cobalt: light-dark(#1f48a0, #a9c1f5);
+  --color-on-cobalt: light-dark(#ffffff, #0b1530);
+  --color-cobalt-soft: light-dark(#dfe6f6, #172036);
+
+  /* Processing, PATCH, notices: khaki olive. */
+  --color-khaki: light-dark(#575417, #d8d48d);
+  --color-on-khaki: light-dark(#ffffff, #1d1c06);
+  --color-khaki-soft: light-dark(#ebe8cd, #29280f);
+
+  /* Shipped, PUT: charcoal chip (inverted). */
+  --color-charcoal: light-dark(#2b2f36, #d7dce4);
+  --color-on-charcoal: light-dark(#f4efe6, #14161a);
+
+  /* Pending payment: ash. */
+  --color-ash: light-dark(#4a4e54, #c8cbd1);
+  --color-ash-soft: light-dark(#e6e4e0, #25262a);
+
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Typography (variables from next/font in app/layout.tsx). */
+  --font-display: var(--font-rokkitt), "Rockwell", "Roboto Slab", Georgia, serif;
+  --font-sans: var(--font-nunito-sans), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, "Cascadia Mono", monospace;
+
+  --radius-control: 0.375rem;
+  --radius-card: 0.75rem;
+  --radius-pill: 999px;
+
+  /* A hide resting on the bench: low and warm, not floating. */
+  --shadow-card: 0 1px 0 rgb(28 23 20 / 0.06), 0 10px 24px -18px rgb(74 44 29 / 0.55);
+  --shadow-pop: 0 22px 48px -18px rgb(21 16 13 / 0.6);
+
+  --container-form: 34rem;
+  --container-page: 78rem;
+
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-rise: rise 0.25s ease-out both;
+
+  @keyframes shimmer {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * THEME SWITCHING. No attribute: follow the OS. data-theme="light"|"dark":
+ * set before first paint by the inline script in app/layout.tsx, so a saved
+ * choice never flashes the other theme.
+ */
+:root {
+  color-scheme: light dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  /* ONE focus style for keyboard users everywhere: a solid denim ring,
+     clearly not part of the brown design. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  [tabindex="-1"]:focus {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background-color: var(--color-tint-strong);
+    color: var(--color-ink);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+
+  dialog::backdrop {
+    background: rgb(14 10 8 / 0.6);
+  }
+}
+
+/* Inputs: a visible border and a thick denim edge when focused. aria-invalid
+   fields get a red border; the message under the field says what's wrong. */
+@utility field {
+  background-color: var(--color-raised);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-ink);
+  &[aria-invalid="true"] {
+    border-color: var(--color-danger);
+    border-width: 2px;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 0;
+    border-color: var(--color-focus);
+  }
+}
+
+/* PRICES, QUANTITIES, DATES: tabular figures, so columns of Naira line up. */
+@utility figures {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* A link in body text: denim, underlined. */
+@utility link {
+  color: var(--color-link);
+  text-decoration-line: underline;
+  font-weight: 600;
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* THE STITCHED EDGE: a dashed "thread" line inset from a card's border,
+   like the saddle stitching around a leather panel. */
+@utility stitched {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1.5px dashed var(--color-line);
+    border-radius: calc(var(--radius-card) - 4px);
+    pointer-events: none;
+  }
+}
+
+/* A STAMPED LABEL: small caps in the display face, letter-spaced, like
+   a maker's mark pressed into leather. */
+@utility stamp {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+}
+
+/* A stitched rule between sections. */
+@utility seam {
+  height: 2px;
+  background-image: linear-gradient(90deg, var(--color-line) 0 8px, transparent 8px 14px);
+  background-size: 14px 2px;
+  background-repeat: repeat-x;
+}
+
+/* Skeleton shimmer for loading states. */
+@utility skeleton {
+  background-image: linear-gradient(90deg, var(--color-sunken) 0%, var(--color-line) 50%, var(--color-sunken) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: var(--radius-control);
+}
+
+/*
+ * REDUCED MOTION: people who ask their OS for less motion get none.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

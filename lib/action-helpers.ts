@@ -1,10 +1,15 @@
-// Small helpers shared by the inventory Server Actions.
+// Small helpers shared by the Server Actions (my own pages' transport).
+import 'server-only'
+
+import type { z } from 'zod'
+import { rethrowNextErrors } from '@/lib/next-errors'
+import { isServiceError } from '@/lib/services/errors'
 import { field, type FormState } from '@/lib/validation'
 
 /** The `id` hidden field as a positive whole number, or null if it's missing or tampered with. */
 export function readId(formData: FormData, name = 'id'): number | null {
   const value = field(formData, name)
-  return /^\d{1,9}$/.test(value) ? Number(value) : null
+  return /^\d{1,15}$/.test(value) ? Number(value) : null
 }
 
 /** The `archived` hidden field: "true" archives, anything else restores. */
@@ -36,4 +41,32 @@ export function fieldError<F extends string>(name: F, message: string, values: P
 /** "1 product" / "6 products". */
 export function plural(count: number, one: string, many = `${one}s`): string {
   return `${count.toLocaleString('en-NG')} ${count === 1 ? one : many}`
+}
+
+/**
+ * A ServiceError, as the form state my pages' forms understand. The SAME
+ * error the API would answer with problem+json: its field errors land under
+ * the matching inputs (API field names are snake_case, and so are the form
+ * inputs), and the message goes in the error summary. Anything that isn't
+ * a ServiceError is re-thrown for the error boundary.
+ */
+export function fromServiceError<F extends string>(error: unknown, values: Partial<Record<F, string>> = {}): FormState<F> {
+  rethrowNextErrors(error)
+  if (!isServiceError(error)) throw error
+  const fieldErrors: Partial<Record<F, string[]>> = {}
+  for (const issue of error.errors) {
+    const key = issue.field as F
+    fieldErrors[key] = [...(fieldErrors[key] ?? []), issue.message]
+  }
+  return { status: 'error', message: error.message, fieldErrors, values, submissionId: Date.now() }
+}
+
+/** A failed Zod parse of a request schema, as form state (field names match the inputs). */
+export function fromZodError<F extends string>(error: z.ZodError, values: Partial<Record<F, string>> = {}): FormState<F> {
+  const fieldErrors: Partial<Record<F, string[]>> = {}
+  for (const issue of error.issues) {
+    const key = issue.path.map(String).join('.') as F
+    fieldErrors[key] = [...(fieldErrors[key] ?? []), issue.message]
+  }
+  return { status: 'error', message: 'Please fix the problems below.', fieldErrors, values, submissionId: Date.now() }
 }
