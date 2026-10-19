@@ -53,7 +53,7 @@ export const ok = (body: unknown, headers?: Record<string, string>): ApiResult =
 export const created = (body: unknown, location: string, headers?: Record<string, string>): ApiResult => ({ status: 201, body, location, headers })
 export const noContent = (): ApiResult => ({ status: 204 })
 
-type RouteContext = { params: Promise<Record<string, string | string[] | undefined>> }
+type RouteContext = { params?: Promise<Record<string, string | string[] | undefined>> }
 
 /** Zod issues → [{ field, message }], with paths like "items.0.quantity". */
 export function fieldIssues(error: z.ZodError): FieldIssue[] {
@@ -161,7 +161,8 @@ export function handle<P extends z.ZodType, Q extends z.ZodType, B extends z.Zod
       }
 
       // A path segment that doesn't fit (/orders/abc) names nothing: 404.
-      const params = ep.params.safeParse(await route.params)
+      // (Routes without a dynamic segment get no params at all.)
+      const params = ep.params.safeParse((await route?.params) ?? {})
       if (!params.success) fail({ status: 404, code: 'not_found', detail: 'Nothing exists at this address.' })
 
       const query = ep.query.safeParse(queryObject(url))
