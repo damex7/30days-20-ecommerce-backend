@@ -83,3 +83,8 @@ export async function runIdempotent<T>(
     throw error
   }
 }
+
+/** The daily cron: a key only needs to outlive any sensible retry (24 hours). */
+export function purgeOldKeys(): Promise<number> {
+  return repo.purgeOldIdempotencyKeys(http, 24)
+}
