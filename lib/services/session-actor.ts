@@ -28,3 +28,9 @@ export async function requireShopActor(): Promise<UserActor> {
   const { user } = await requireRole('staff', 'admin')
   return userActor(user)
 }
+
+/** Admins only (coupons, delivery fees, users, API keys, the webhook log). */
+export async function requireAdminActor(): Promise<UserActor> {
+  const { user } = await requireRole('admin')
+  return userActor(user)
+}
