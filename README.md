@@ -644,7 +644,65 @@ Every check:
 
 ## EXPLAIN: the product list and the order lists
 
-<!-- EXPLAIN OUTPUT -->
+`npm run db:explain` runs `EXPLAIN ANALYZE` on the same SQL the repos send. It runs once on the seeded shop (24 products, 42 orders). It runs again after adding **20,000 products (60,000 variants) and 40,000 orders** inside a transaction that is then rolled back, so the database is left exactly as it was. These numbers are from Neon (eu-central-1), 20 October 2026:
+
+| Query | Seeded | +20k products / +40k orders | Plan at scale |
+| --- | --- | --- | --- |
+| Products in a category, newest first (first page) | 0.30 ms | **0.25 ms** | `products_active_newest_idx` (the partial "active only" index), stops after 25 rows |
+| Size 42 + tan + in stock + under ₦50,000, cheapest first | 0.31 ms | **22.8 ms** | walks `products_active_price_idx` in price order, probing each product's variants |
+| Full-text search "leather loafer" | 0.09 ms | **2.6 ms** | seq scan with the `@@` filter (see below) |
+| Admin orders, status "paid", newest first | 0.07 ms | **0.21 ms** | an index on `(created_at DESC, id DESC)` with the status filter, stops after 21 rows |
+| A customer's orders, newest first | 0.25 ms | **0.14 ms** | `orders_created_idx`, filtered to the customer |
+| The expiry sweep (unpaid and overdue) | 0.02 ms | **0.02 ms** | `orders_pending_expiry_idx`: the partial index holds only pending orders |
+
+**The product list at scale** (category filter, newest first). An index range scan reads 99 rows to return 25; then one index lookup per product for its variants and its main image:
+
+```
+Limit (actual time=0.041..0.205 rows=25.00 loops=1)
+  InitPlan 1
+    ->  Index Scan using categories_slug_key on categories (actual time=0.004..0.004 rows=1.00 loops=1)
+          Index Cond: (slug = 'shoes'::text)
+  ->  Nested Loop Left Join (actual time=0.040..0.202 rows=25.00 loops=1)
+        ->  Nested Loop Left Join (actual time=0.035..0.176 rows=25.00 loops=1)
+              ->  Nested Loop (actual time=0.023..0.092 rows=25.00 loops=1)
+                    ->  Index Scan using products_active_newest_idx on products p (actual time=0.017..0.077 rows=25.00 loops=1)
+                          Filter: (category_id = (InitPlan 1).col1)
+                          Rows Removed by Filter: 74
+                    ->  Materialize (actual time=0.000..0.000 rows=1.00 loops=25)
+                          ->  Index Scan using categories_pkey on categories c (actual time=0.003..0.003 rows=1.00 loops=1)
+              ->  Aggregate (actual time=0.003..0.003 rows=1.00 loops=25)
+                    ->  Index Scan using product_variants_product_size_colour_key on product_variants v (actual time=0.001..0.002 rows=3.00 loops=25)
+                          Index Cond: (product_id = p.id)
+        ->  Limit (actual time=0.001..0.001 rows=0.00 loops=25)
+              ->  Index Scan using product_images_product_id_position_key on product_images i (actual time=0.000..0.000 rows=0.00 loops=25)
+                    Index Cond: (product_id = p.id)
+Planning Time: 0.372 ms
+Execution Time: 0.250 ms
+```
+
+**The admin orders list at scale** (status "paid", newest first):
+
+```
+Limit (actual time=0.036..0.180 rows=21.00 loops=1)
+  ->  Index Scan using orders_created_idx on orders o (actual time=0.035..0.177 rows=21.00 loops=1)
+        Filter: (status = 'paid'::text)
+        Rows Removed by Filter: 143
+        SubPlan 1
+          ->  Aggregate (actual time=0.005..0.005 rows=1.00 loops=21)
+                ->  Seq Scan on order_items oi (actual time=0.004..0.004 rows=0.05 loops=21)
+                      Filter: (order_id = o.id)
+Planning Time: 0.226 ms
+Execution Time: 0.207 ms
+```
+
+**What the plans show:**
+
+- **Keyset pagination plus a matching index means the database stops early.** Every list ends in `LIMIT n+1`, and the index is already in the list's order. So PostgreSQL reads a few dozen rows, however many thousand exist. Later pages use the same index from the cursor onward.
+- **The partial indexes earn their keep.** `WHERE status = 'active'` in the SQL is a literal, not `= ANY($1)`, so the planner can use the "active products only" indexes. The 2,000 drafts and 2,000 archived products in the test cost nothing. The same goes for the expiry sweep's "pending only" index.
+- **For "paid" orders the planner chose the plain date index over `orders_status_created_idx`.** One order in eight is paid, so walking newest-first and skipping 143 rows was cheaper. On the seeded data, where few orders are paid, it picks `orders_status_created_idx`. Both are fast; the planner decides with real statistics.
+- **Weak spot 1: rare variant combinations with a price sort (22.8 ms).** "42 + tan under ₦50,000, cheapest first" matched only 6 of 16,000 active products, so the price-ordered walk probed nearly all of them before running out. It's still quick, but it grows with the catalogue. The next step is an index on variants `(lower(size), lower(colour))` so the planner can start from the few matching variants. I haven't added it, because at 24 products it would only slow down writes.
+- **Weak spot 2: search uses a seq scan here (2.6 ms).** The 20,000 test products share one description, and the planner judged a straight scan of 20,000 small rows cheaper than the GIN index for a word combination it expected to be rare. With real, varied descriptions the GIN index (`products_search_idx`) is what makes search scale, as Day 16's EXPLAIN showed.
+- `order_items` shows a seq scan only because the test orders have no lines (the table has 91 rows). With real data, the `UNIQUE (order_id, variant_id)` index serves "the lines of order N".
 
 ## Demo mode
 
