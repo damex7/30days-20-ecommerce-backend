@@ -26,7 +26,7 @@ export function parseRows<T>(schema: z.ZodType<T>, rows: unknown[], query: strin
  * wouldn't fit exactly is refused rather than silently rounded.
  */
 export const int8 = z
-  .union([z.string().regex(/^-?d+$/), z.number().int(), z.bigint()])
+  .union([z.string().regex(/^-?\d+$/), z.number().int(), z.bigint()])
   .transform((value) => Number(value))
   .pipe(z.number().int().refine(Number.isSafeInteger, 'bigint is too large for a JavaScript number'))
 
