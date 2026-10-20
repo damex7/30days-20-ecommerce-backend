@@ -342,6 +342,12 @@ export async function takeStock(tx: Db, variantId: number, quantity: number): Pr
   return result[0]?.stock ?? null
 }
 
+/** The stock on the shelf right now (for an honest "only N left" after a lost race). */
+export async function currentStock(tx: Db, variantId: number): Promise<number> {
+  const result = await rows(tx, z.object({ stock: z.number().int() }), q`SELECT stock FROM product_variants WHERE id = ${variantId}`, 'currentStock')
+  return result[0]?.stock ?? 0
+}
+
 /** Puts an order's units back on the shelf (expiry, cancellation, refund). */
 export async function returnStockForOrder(tx: Db, orderId: number): Promise<void> {
   await tx.query(q`

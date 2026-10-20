@@ -68,7 +68,11 @@ export async function placeOrder(actor: Actor, input: { addressId: number }, req
       const sellable = line.productStatus === 'active' && line.variantStatus === 'active'
       const left = sellable ? await ordersRepo.takeStock(tx, line.variantId, line.quantity) : null
       if (left === null) {
-        short.push({ variant_id: line.variantId, sku: line.sku, name: `${line.productName} (${line.size} / ${line.colour})`, requested: line.quantity, available: sellable ? line.stock : 0 })
+        // Re-read the stock NOW: under READ COMMITTED this new statement sees
+        // what a checkout that just won the race left behind, not the figure
+        // the cart was read with a moment ago.
+        const available = sellable ? await ordersRepo.currentStock(tx, line.variantId) : 0
+        short.push({ variant_id: line.variantId, sku: line.sku, name: `${line.productName} (${line.size} / ${line.colour})`, requested: line.quantity, available })
       }
     }
     if (short.length > 0) {
