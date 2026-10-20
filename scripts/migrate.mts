@@ -25,7 +25,7 @@ neonConfig.webSocketConstructor = WebSocket
 
 // Schema changes prefer the DIRECT connection when it's configured: one real
 // PostgreSQL session, not one borrowed from the pooler per transaction.
-const connectionString = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL
+const connectionString = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL
 if (!connectionString) {
   console.error('DATABASE_URL is not set. Copy .env.example to .env.local and paste your Neon connection string.')
   process.exit(1)

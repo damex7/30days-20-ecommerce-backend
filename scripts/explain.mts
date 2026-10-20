@@ -14,7 +14,7 @@
 import { neonConfig, Pool } from '@neondatabase/serverless'
 
 neonConfig.webSocketConstructor = WebSocket
-const connectionString = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL
+const connectionString = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL
 if (!connectionString) {
   console.error('DATABASE_URL is not set.')
   process.exit(1)
