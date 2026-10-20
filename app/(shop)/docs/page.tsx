@@ -130,8 +130,8 @@ export default function DocsPage() {
   const anchor = (id: string) => `op-${id}`
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[15rem_1fr]">
-      <nav aria-label="API sections" className="self-start lg:sticky lg:top-4">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[15rem_1fr]">
+      <nav aria-label="API sections" className="min-w-0 self-start lg:sticky lg:top-4">
         <details className="rounded-card border border-line bg-raised p-3 shadow-card lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none" open>
           <summary className="min-h-10 cursor-pointer content-center font-display text-lg font-bold">Contents</summary>
           <ul className="mt-2 space-y-3 text-sm">

@@ -93,7 +93,7 @@ async function Order({ params, searchParams }: Pick<PageProps<'/account/orders/[
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_22rem]">
         <section aria-labelledby="items-title" className="rounded-card border border-line bg-raised p-5 shadow-card">
           <h2 id="items-title" className="text-2xl">
             Items

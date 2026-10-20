@@ -54,7 +54,7 @@ async function AdminOrder({ params }: Pick<PageProps<'/admin/orders/[id]'>, 'par
         }
       />
       <ReadOnlyNote show={readOnly} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_24rem]">
         <div className="space-y-6">
           <section aria-labelledby="move-title" className="rounded-card border border-line bg-raised p-5 shadow-card">
             <h2 id="move-title" className="mb-1 text-2xl">

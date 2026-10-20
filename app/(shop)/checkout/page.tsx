@@ -42,7 +42,7 @@ async function Checkout({ searchParams }: Pick<PageProps<'/checkout'>, 'searchPa
   const reason = !chosen ? 'Add a delivery address first.' : !cart.ready ? 'Something in your cart needs attention: go back to the cart.' : null
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_24rem]">
       <div className="space-y-6">
         <section aria-labelledby="address-title" className="rounded-card border border-line bg-raised p-5 shadow-card">
           <h2 id="address-title" className="text-2xl">

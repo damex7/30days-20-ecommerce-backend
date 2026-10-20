@@ -43,7 +43,7 @@ async function Product({ params }: Pick<PageProps<'/products/[slug]'>, 'params'>
   const totalStock = product.variants.reduce((n, v) => n + (v.status === 'active' ? v.stock : 0), 0)
 
   return (
-    <article className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+    <article className="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_1fr]">
       <div>
         <Link href={`/products?category=${product.categorySlug}`} className="mb-3 inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-muted no-underline hover:text-ink hover:underline">
           <Icon name="arrowLeft" className="size-4" />
@@ -106,7 +106,7 @@ async function Product({ params }: Pick<PageProps<'/products/[slug]'>, 'params'>
 
 function ProductSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading product" className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+    <div aria-busy="true" aria-label="Loading product" className="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_1fr]">
       <div className="skeleton aspect-[5/4] w-full rounded-card" />
       <div className="space-y-4">
         <div className="skeleton h-4 w-24" />

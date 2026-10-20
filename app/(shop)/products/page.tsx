@@ -57,7 +57,7 @@ async function Catalogue({ searchParams }: Pick<PageProps<'/products'>, 'searchP
   const filtered = Boolean(query.category || query.q || query.size || query.colour || query.min || query.max || query.in_stock)
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[17rem_1fr]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[17rem_1fr]">
       <Filters query={query} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} sizes={facets.sizes} colours={facets.colours} />
       <section aria-labelledby="results-title" className="min-w-0">
         <h2 id="results-title" className="sr-only">

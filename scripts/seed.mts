@@ -328,7 +328,8 @@ try {
       const quantities = lines.map(() => (rand() < 0.8 ? 1 : 2))
       const subtotal = lines.reduce((sum, v, i) => sum + Number(v.price_kobo) * quantities[i]!, 0)
       // Some orders used ABA10 (only paid-ish ones over the minimum, once per customer).
-      const usesCoupon = subtotal >= 3_000_000 && plan.status !== 'cancelled' && plan.status !== 'pending_payment' && !usedAba10.has(customer.email) && rand() < 0.4
+      // customer@example.com never has, so whoever tries the demo login can apply ABA10 themselves.
+      const usesCoupon = subtotal >= 3_000_000 && plan.status !== 'cancelled' && plan.status !== 'pending_payment' && !usedAba10.has(customer.email) && customer.email !== 'customer@example.com' && rand() < 0.4
       if (usesCoupon) usedAba10.add(customer.email)
       const discount = usesCoupon ? Math.floor(subtotal / 10) : 0
       const total = subtotal - discount + Number(fee.fee_kobo)

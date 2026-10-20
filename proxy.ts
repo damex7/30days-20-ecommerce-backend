@@ -44,16 +44,30 @@ export async function proxy(request: NextRequest) {
   if (!isApi) {
     const orderMatch = token ? ORDER_PATH.exec(pathname) : null
     if (token && orderMatch?.[1] && /^[A-Za-z0-9_-]{43}$/.test(token)) {
-      const visibility = await orderVisibility(hashToken(token), Number(orderMatch[1])).catch(() => 'visible' as const)
+      const visibility = await orderVisibility(hashToken(token), Number(orderMatch[1])).catch((error: unknown) => {
+        // The page still checks ownership itself; only the status code is at stake here.
+        console.error('[proxy] order visibility check failed:', error)
+        return 'visible' as const
+      })
       if (visibility === 'hidden') {
-        return NextResponse.rewrite(new URL('/order-not-found', request.url), { status: 404, headers: { 'X-Request-Id': requestId } })
+        // Rewritten to a path that has NO route, so Next.js itself renders
+        // app/not-found.tsx with a genuine 404 status. (A rewrite to a real
+        // page with { status: 404 } isn't enough under Cache Components: the
+        // page's static shell is already streaming with 200.) Headers are set
+        // AFTER creating the response: passing `headers` to rewrite()
+        // replaces the internal header that marks the rewrite.
+        const notFound = NextResponse.rewrite(new URL('/_order-not-found', request.url))
+        notFound.headers.set('X-Request-Id', requestId)
+        return notFound
       }
     }
 
     if (isProtected(pathname) && !token) {
       const login = new URL('/login', request.url)
       login.searchParams.set('next', pathname + search)
-      return NextResponse.redirect(login, { headers: { 'X-Request-Id': requestId } })
+      const redirect = NextResponse.redirect(login)
+      redirect.headers.set('X-Request-Id', requestId)
+      return redirect
     }
   }
 

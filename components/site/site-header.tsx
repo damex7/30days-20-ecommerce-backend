@@ -18,19 +18,19 @@ import { ThemeToggle } from './theme-toggle'
 export function SiteHeader() {
   return (
     <header className="border-b border-line bg-paper">
-      <div className="mx-auto flex max-w-page items-center gap-1 px-3 py-2 sm:gap-2 sm:px-6">
+      <div className="mx-auto flex max-w-page items-center gap-0.5 px-2 py-2 sm:gap-2 sm:px-6">
         <Logo />
         <nav aria-label="Shop" className="flex items-center">
-          <Link href="/products" className={`${button.ghost} px-2.5 sm:px-3`}>
+          <Link href="/products" className={`${button.ghost} px-2 sm:px-3`}>
             <Icon name="store" className="sm:hidden" />
             <span className="max-sm:sr-only">Shop</span>
           </Link>
-          <Link href="/docs" className={`${button.ghost} px-2.5 sm:px-3`}>
+          <Link href="/docs" className={`${button.ghost} px-2 sm:px-3`}>
             <Icon name="code" className="sm:hidden" />
             <span className="max-sm:sr-only">API</span>
           </Link>
         </nav>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2">
           <ThemeToggle />
           <Suspense fallback={<span className="skeleton block h-11 w-20 sm:w-48" />}>
             <AccountControls />
@@ -66,7 +66,7 @@ async function AccountControls() {
   return (
     <>
       {role === 'customer' ? (
-        <Link href="/cart" className={`${button.ghost} relative px-2.5`} aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
+        <Link href="/cart" className={`${button.ghost} relative px-2`} aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
           <Icon name="cart" />
           {count > 0 ? (
             <span aria-hidden className="figures absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-pill bg-brand px-1 text-xs font-bold text-on-brand">
@@ -75,12 +75,12 @@ async function AccountControls() {
           ) : null}
         </Link>
       ) : (
-        <Link href="/admin" className={`${button.secondary} px-3`}>
+        <Link href="/admin" className={`${button.secondary} px-2.5 sm:px-3`}>
           <Icon name="dashboard" />
           <span className="max-sm:sr-only">Workshop</span>
         </Link>
       )}
-      <Link href="/account" className={`${button.ghost} max-w-40 px-2.5`} aria-label={`Your account (${name})`}>
+      <Link href="/account" className={`${button.ghost} max-w-40 px-2`} aria-label={`Your account (${name})`}>
         <Icon name="user" />
         <span className="truncate max-md:hidden">{name}</span>
       </Link>

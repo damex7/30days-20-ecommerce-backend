@@ -49,7 +49,7 @@ async function Overview() {
           </li>
         ))}
       </ul>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section aria-labelledby="recent-title" className="rounded-card border border-line bg-raised p-5 shadow-card">
           <div className="mb-3 flex items-center justify-between">
             <h2 id="recent-title" className="text-2xl">

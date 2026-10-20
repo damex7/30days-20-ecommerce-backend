@@ -40,7 +40,7 @@ async function Coupons() {
   return (
     <div className="space-y-6">
       <ReadOnlyNote show={readOnly} />
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {page.items.map((c) => {
           const state = couponState(c)
           return (
