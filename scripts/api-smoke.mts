@@ -51,7 +51,9 @@ async function call(method: string, path: string, options: { key?: string; cooki
   if (options.cookie) headers.Cookie = options.cookie
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
   const response = await fetch(`${BASE}${path}`, { method, headers, body: options.body === undefined ? undefined : JSON.stringify(options.body), redirect: 'manual' })
-  sawRequestIds.push(Boolean(response.headers.get('x-request-id')))
+  // 304s are exempt: a CDN (Vercel's edge included) may strip everything but
+  // the caching headers from a "Not Modified", as HTTP allows.
+  if (response.status !== 304) sawRequestIds.push(Boolean(response.headers.get('x-request-id')))
   const text = await response.text()
   let body: Json = {}
   try {
@@ -165,7 +167,7 @@ try {
   check('a move outside the state machine → 409 invalid_transition', impossible.status === 409 && String(impossible.body.type).endsWith('invalid_transition'), `HTTP ${impossible.status} ${String(impossible.body.type)}`)
 
   // 10. Request ids --------------------------------------------------------------
-  check(`every response carried X-Request-Id (${sawRequestIds.length} responses)`, sawRequestIds.every(Boolean))
+  check(`every response (but 304s) carried X-Request-Id (${sawRequestIds.length} responses)`, sawRequestIds.every(Boolean))
 } catch (error) {
   failed++
   console.log(`  FAIL  the run stopped: ${error instanceof Error ? error.message : String(error)}`)

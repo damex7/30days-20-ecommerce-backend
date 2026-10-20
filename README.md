@@ -1,5 +1,7 @@
 # Ọjà
 
+**Live:** <https://oja-ecommerce-backend.vercel.app> · **API reference:** [/docs](https://oja-ecommerce-backend.vercel.app/docs) · **OpenAPI:** [/api/v1/openapi.json](https://oja-ecommerce-backend.vercel.app/api/v1/openapi.json). Use "Explore the demo" on the sign-in page to look around as a customer, staff member or admin.
+
 **Ọjà** ("market" in Yoruba) is the backend of a leather-goods brand from Aba: shoes, bags, belts and sandals cut and stitched in the workshops of Ariaria market and sold across Nigeria. It is a **versioned REST API** (`/api/v1`) that a phone app, a courier's system or another website can use, plus a thin storefront and admin built on top of the same code to prove it works.
 
 - **Customers** sign up, browse and filter the catalogue, keep a cart, save delivery addresses, apply a coupon and pay with Paystack (test mode). They follow each order's status on a timeline.
@@ -423,7 +425,7 @@ X-Request-Id: 2f7c1a9e-5b1d-4c9a-9f0e-8d6b3a1c4e77
 - **SQL and stack traces never leave the server.** An unexpected error is logged in full under its request id and answered with a bare 500 that quotes the id.
 - **If the database can't be reached** the answer is **503** with `Retry-After`. Pages show a friendly "we can't reach the shop's database" screen instead.
 
-**Every response carries `X-Request-Id`.** `proxy.ts` makes one (or keeps a sane one the client sent). The same id is in the server's log line for that request:
+**Every response carries `X-Request-Id`** (except a 304 served through Vercel's edge, which keeps only the caching headers on "Not Modified", as HTTP allows). `proxy.ts` makes one (or keeps a sane one the client sent). The same id is in the server's log line for that request:
 
 ```
 [api] 2f7c1a9e-… POST /api/v1/cart/items 422 38ms user:4b1f0c2a(customer)
